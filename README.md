@@ -6,6 +6,7 @@
 
 ## 📁 Project Structure
 
+```
 survpipe/
 │
 ├── data/
@@ -17,6 +18,7 @@ survpipe/
 ├── models.py # Model definitions with hyperparameter grids
 ├── runner.py # Core function to run models with 5-fold CV
 └── main.py # Entry point script to execute training and evaluation
+```
 
 ## 🔍 Features
 
@@ -41,7 +43,7 @@ survpipe/
 
 ## 🚀 Quick Start
 
-1. **Place your dataset** in the `data/` directory and rename it to `hcv_cirrhosis_ML_feat.csv` (or modify `config.py` to reflect a different name).
+1. **Place your dataset** in the `data/` directory and rename it to `ML_feat.csv` (or modify `config.py` to reflect a different name).
 
 2. **Install dependencies** (recommended in a virtual environment):
    ```bash
