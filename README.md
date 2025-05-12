@@ -31,9 +31,8 @@ survpipe/
   - **Outcomes** (e.g., cirrhosis, liver cancer)
   - **Feature sets** (diagnoses, meds, labs, lifestyle, etc.)
 
-- Cross-validation metrics:
+- Cross-validation metric:
   - **C-index**
-  - **Integrated Brier Score (IBS)**
 
 - Automatically handles:
   - Dataset loading
@@ -75,5 +74,4 @@ survpipe/
   -Mean and standard deviation of:
   
     - **C-index**
-  
-    - **Integrated Brier Score (IBS)**
+
