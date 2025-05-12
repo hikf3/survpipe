@@ -63,16 +63,16 @@ survpipe/
 -To modify evaluation, update runner.py.
 
 ## 📊 Output Files
--Each CSV in the results/ directory includes:
+**Each CSV in the results/ directory includes**:
 
--Model and outcome name
-
--Feature set key
-
--Parameter configuration
-
--Mean and standard deviation of:
-
-  -C-index
-
-  -Integrated Brier Score (IBS)
+  -Model and outcome name
+  
+  -Feature set key
+  
+  -Parameter configuration
+  
+  -Mean and standard deviation of:
+  
+    - **C-index**
+  
+    - **Integrated Brier Score (IBS)**
