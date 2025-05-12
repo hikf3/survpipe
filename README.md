@@ -9,7 +9,7 @@
 survpipe/
 │
 ├── data/
-│ └── hcv_cirrhosis_ML_feat.csv # Input dataset
+│ └── ML_feat.csv # Input dataset
 │
 ├── results/ # Output directory for results
 │
