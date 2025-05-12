@@ -6,7 +6,7 @@ import os
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # Path to dataset (expects dataset inside the 'data/' folder)
-DATA_PATH = os.path.join(BASE_DIR, "data", "hcv_cirrhosis_ML_feat.csv")
+DATA_PATH = os.path.join(BASE_DIR, "data", "ML_feat.csv")
 
 # Output results directory
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
