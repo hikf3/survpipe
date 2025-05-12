@@ -56,11 +56,12 @@ survpipe/
 4. **Results** will be saved in results/ as CSV files (one per model per outcome)
 
 ## ⚙️ Customization
--To add a new model, define it in models.py and include it in the GET_MODEL_SET dictionary.
+-To add a new model, define it in models.py and include it in the `GET_MODEL_SET` dictionary.
+-To add new parameter combinations, define them in models.py and include them in the `GET_PARAM_GRIDS` dictionary.
 
--To change features or outcomes, edit config.py.
+-To change features or outcomes, edit `config.py`.
 
--To modify evaluation, update runner.py.
+-To modify evaluation, update `runner.py`.
 
 ## 📊 Output Files
 **Each CSV in the results/ directory includes**:
