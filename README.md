@@ -75,3 +75,7 @@ survpipe/
   
     - **C-index**
 
+## Evaluation 
+- Time-dependent AUCs
+- Time-dependent Brier Score
+- For all outcomes, the files generate `.csv` files and a `.png` for the metrics
