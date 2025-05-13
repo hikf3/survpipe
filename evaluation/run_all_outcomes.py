@@ -2,8 +2,8 @@
 from evaluation import evaluate_models
 
 # Common inputs
-data_path = "hcv_cirrhosis/data/hcv_cirrhosis_ML_feat.csv"
-output_dir = "hcv_cirrhosis/results"
+data_path = "data/ML_feat.csv"
+output_dir = "/results"
 eval_times = [1, 3, 5, 8, 10]
 
 features = [  # combo "f"
