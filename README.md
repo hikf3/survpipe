@@ -4,78 +4,203 @@
 
 ---
 
-## 📁 Project Structure
+A reproducible survival-analysis pipeline for tabular EHR-style data with:
+- leakage-safe preprocessing fit on TRAIN only
+- K-fold CV hyperparameter selection
+- time-dependent AUC at multiple horizons
+- bootstrap C-index on test
+- permutation-importance feature ranking (raw features)
+- reduced models (Top 50% / Top 25%) based on CV permutation importance
+- optional Kaplan–Meier plots and log-rank tests (if `lifelines` is installed)
 
-```
-survpipe/
-│
-├── data/
-│ └── ML_feat.csv # Input dataset
-│
-├── results/ # Output directory for results
-│
-├── config.py # Configuration for paths, outcomes, and features
-├── models.py # Model definitions with hyperparameter grids
-├── runner.py # Core function to run models with 5-fold CV
-└── main.py # Entry point script to execute training and evaluation
-```
+Supported model families:
+- Coxnet Elastic Net (`Coxnet-EN`)
+- Coxnet LASSO (`Coxnet-LASSO`)
+- Random Survival Forest (`RSF`)
+- Gradient Boosted Survival (`GBSA`)
+- Cox Neural Network (`CoxNN`, PyTorch)
 
-## 🔍 Features
-
-- Supports survival models:  
-  - Random Survival Forest (`RSF`)  
-  - Gradient Boosting Survival Analysis (`GBSA`)  
-  - Coxnet (Lasso/ElasticNet penalized Cox regression)
-
-- Evaluates across multiple:
-  - **Outcomes** (e.g., cirrhosis, liver cancer)
-  - **Feature sets** (diagnoses, meds, labs, lifestyle, etc.)
-
-- Cross-validation metric:
-  - **C-index**
-
-- Automatically handles:
-  - Dataset loading
-  - Folder creation for results
+> Note: `scikit-survival` is required for Coxnet/RSF/GBSA and survival metrics. `PyTorch` is required only for `CoxNN`.
 
 ---
 
-## 🚀 Quick Start
+## Repository structure (recommended)
 
-1. **Place your dataset** in the `data/` directory and rename it to `ML_feat.csv` (or modify `config.py` to reflect a different name).
 
-2. **Install dependencies** (recommended in a virtual environment):
-   ```bash
-   pip install -r requirements.txt
-   
-3. **Run the pipeline**
-    ```bash
-    python3 main.py
-    
-4. **Results** will be saved in results/ as CSV files (one per model per outcome)
+## 📁 Project Structure
 
-## ⚙️ Customization
--To add a new model, define it in models.py and include it in the `GET_MODEL_SET` dictionary.
--To add new parameter combinations, define them in models.py and include them in the `GET_PARAM_GRIDS` dictionary.
+```
+├── surv2/
+│ ├── init.py
+│ ├── config.py
+│ ├── preprocess.py
+│ ├── models.py
+│ ├── utils_surv.py
+│ ├── pipeline_survival.py
+│ └── run_all.py
+├── splits/
+│ ├── cirrhosis_split_train_idx.csv
+│ ├── cirrhosis_split_test_idx.csv
+│ ├── HCC_split_train_idx.csv
+│ ├── HCC_split_test_idx.csv
+│ ├── death_split_train_idx.csv
+│ └── death_split_test_idx.csv
+├── hcv_original_feat.csv
+├── requirements.txt
+└── README.md
+```
 
--To change features or outcomes, edit `config.py`.
 
--To modify evaluation, update `runner.py`.
+Your `splits/*.csv` files must contain **row indices** (0-based) with **no header**.
 
-## 📊 Output Files
-**Each CSV in the results/ directory includes**:
+---
 
-  -Model and outcome name
-  
-  -Feature set key
-  
-  -Parameter configuration
-  
-  -Mean and standard deviation of:
-  
-    - **C-index**
+Time units: The pipeline assumes time is in years (recommended).
 
-## Evaluation 
-- Time-dependent AUCs
-- Time-dependent Brier Score
-- For all outcomes, the files generate `.csv` files and a `.png` for the metrics
+## Preprocessing (Leakage-Safe)
+
+All preprocessing is fit on the **TRAIN split only** to prevent data leakage.
+
+### Categorical Features
+- Constant fill with `"__MISSING__"`
+- One-hot encoding
+
+### Binary / Ordinal Features
+- Numeric coercion
+- Constant fill with `0`
+
+### Numeric / Genotype Features
+- Median imputation
+- Signed `log1p` transform for features where `|skew| > SKEW_THRESH`
+- RMS scaling (divide by root mean square)
+- Add missingness indicators for mid/high-missing columns
+
+### Missingness & Skew Thresholds
+
+Controlled in `config.py`:
+- `LOW_MISSING_THRESH`
+- `HIGH_MISSING_THRESH`
+- `SKEW_THRESH`
+
+---
+
+## What the Pipeline Runs
+
+For each outcome:
+
+1. Load dataset from `DATA_PATH`
+2. Load split indices from `SPLIT_DIR`
+3. Clean invalid rows:
+   - Non-finite or non-positive survival time
+   - Non-finite event indicator
+
+For each model in `MODEL_NAMES`:
+
+### Cross-Validation Phase
+- Grid search for best hyperparameters
+- Cross-validation permutation importance (raw features)
+- Save reduced feature lists:
+  - Top 50%
+  - Top 25%
+
+### Final Training
+- Fit final model on entire TRAIN split
+
+### Test Evaluation
+- C-index + bootstrap confidence interval
+- Time-dependent AUC at horizons (default: 3, 5, 10 years)
+- Brier score at 5 years (complete-case)
+- IPCW Brier score (if survival function available)
+- Logistic calibration slope & intercept (when horizon risk available)
+- Save test predictions CSV
+- Test permutation importance (Top-K features, OOM-safe)
+- ROC curve JSONs (3, 5, 10 years)
+- Kaplan–Meier plot PNG + JSON (if `lifelines` installed)
+
+---
+
+## Outputs
+
+All outputs are written to: OUTDIR/outcome=<OUTCOME>/
+
+
+### Cross-Validation Outputs
+- `cv/grid_metrics_<setting>_<model>.csv`
+- `cv/cv_metrics_<setting>_<model>.csv`
+- `cv/cv_perm_importance_mean_<setting>_<model>.csv`
+- `cv/reduced_lists/<model>_top50.json`
+- `cv/reduced_lists/<model>_top25.json`
+
+### Final Model Artifacts
+final_models/<setting>/<model>/
+
+- `model.joblib`
+- `preprocessor.joblib`
+- `features_raw.json`
+- `training_manifest.json`
+
+### Test Outputs
+- `test/test_metrics_<setting>_<model>.csv`
+- `test/test_predictions_<setting>_<model>.csv`
+
+### Plots
+- `plots/roc_<setting>_<model>_<horizon>yr.json`
+- `plots/km_<setting>_<model>_5yr.png` (if `lifelines` available)
+
+---
+
+## Model Settings
+
+`<setting>` is one of:
+- `full`
+- `top50`
+- `top25`
+
+---
+
+## Quickstart
+
+### 1) Create Environment
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+```
+---
+### 2) Configure Paths and Columns
+```
+Edit surv2/config.py:
+
+DATA_PATH — dataset CSV
+
+SPLIT_DIR + split filename templates
+
+OUTCOMES time/event column names
+
+Feature lists and thresholds
+```
+### 3) Run the Pipeline
+```python -m surv2.run_all```
+
+---
+## `requirements.txt`
+
+```
+# Core
+numpy>=1.23
+pandas>=1.5
+scikit-learn>=1.2
+joblib>=1.2
+
+# Survival models + metrics (required for Coxnet/RSF/GBSA + tdAUC + IPCW Brier)
+scikit-survival>=0.22
+
+# Plots / posthoc KM + logrank (optional but recommended)
+lifelines>=0.27
+matplotlib>=3.7
+
+# Neural net Cox model (optional; only needed if using model "CoxNN")
+torch>=2.0
+```
